@@ -30,23 +30,17 @@ const Web3Auth = (()=>{
         const web3AuthInstance = getWeb3AuthInstance();
         const adapter = new OpenloginAdapter.OpenloginAdapter({
             adapterSettings: {
-            // network that your verifier was deployed on (e.g. `testnet`, `mainnet`)
             network: "testnet",
             clientId,
             uxMode: "redirect",
             loginConfig: {
                 jwt: {
                 name: "Custom Firebase Login",
-                /**
-                 * name of custom verifier that you created on Web3Auth Developer Dashboard
-                 * under Custom Auth section
-                 */
                 verifier: "web3auth-firebase-google",
                 typeOfLogin: "jwt",
                 clientId,
                 },
             },
-            redirectUrl: window.location.origin
         },
         });
         web3AuthInstance.configureAdapter(adapter);
@@ -55,30 +49,37 @@ const Web3Auth = (()=>{
         window.web3AuthInstance = web3AuthInstance;
     }
 
-    function loginWithWeb3Auth() {
+    async function loginWithWeb3Auth() {
         const googleProvider = new firebase.auth.GoogleAuthProvider();
         // rest of flow will be handled in redirect handler
-        firebase.auth().signInWithRedirect(googleProvider);
+        return await firebase.auth().signInWithPopup(googleProvider);
     }
 
     async function handleFirebaseRedirect(result) {
         if(!result.user) throw new Error("Firebase user not found");
         try {
+            console.log("handleFirebaseRedirect",result)
             const idToken = await result.user.getIdToken(true)
+            console.log("Id Token", idToken);
+            console.log("Id Token", idToken);
+            console.log("Id Token", idToken);
+            console.log("Id Token", idToken);
+            console.log("Id Token", idToken);
+            console.log("Id Token", idToken);
+            console.log("Id Token", idToken);
             await _login("openlogin", "jwt", idToken);
         } catch(error) {
-            console.error(error.message);
+            console.error("Cannot get id token: ", error.message);
         }
     }
 
     async function _login(adapter, loginProvider, jwtToken) {
         await web3AuthInstance.connectTo(adapter, {
-            relogin: true,
             loginProvider,
             extraLoginOptions: {
-            id_token: jwtToken,
-            domain: window.location.origin,
-            verifierIdField: "sub",
+                id_token: jwtToken,
+                domain: window.location.origin,
+                verifierIdField: "sub",
             },
         });
     }
